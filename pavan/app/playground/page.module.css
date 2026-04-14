@@ -1,0 +1,9 @@
+.soon {
+  font-family: var(--font-body), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 32px;
+  color: var(--ink-muted);
+  margin: 0;
+}

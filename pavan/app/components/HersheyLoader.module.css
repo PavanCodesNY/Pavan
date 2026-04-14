@@ -1,0 +1,53 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--paper-pure);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 450ms var(--ease-ink),
+    transform 450ms var(--ease-ink);
+}
+
+.overlay.fading {
+  opacity: 0;
+  transform: scale(1.015);
+}
+
+.svg {
+  width: min(90vw, 460px);
+  height: auto;
+  display: block;
+}
+
+.stroke {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  transition: stroke-dashoffset var(--dur, 300ms) var(--ease-stroke) var(--delay, 0ms);
+}
+
+.overlay.writing .stroke {
+  stroke-dashoffset: 0;
+}
+
+.static {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(40px, 11vw, 72px);
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-ink);
+}
+.overlay.writing .static {
+  opacity: 1;
+}

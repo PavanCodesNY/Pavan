@@ -1,0 +1,41 @@
+.line {
+  font-family: var(--font-body), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 32px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin: 0;
+  font-feature-settings: "kern", "liga", "onum";
+}
+
+.part {
+  display: inline-block;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 1800ms var(--ease-ink);
+}
+
+:global(body.bleed-links) .link {
+  border-bottom-color: var(--accent);
+}
+
+.link:focus-visible {
+  outline: 1px solid var(--accent-target);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+@media (max-width: 480px) {
+  .line {
+    font-size: 19px;
+    line-height: 28px;
+  }
+}

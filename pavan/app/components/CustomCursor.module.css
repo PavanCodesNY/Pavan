@@ -1,0 +1,60 @@
+.wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 80;
+  will-change: transform;
+}
+
+.dot,
+.ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background: var(--ink);
+  opacity: 0.85;
+  transition: opacity 180ms var(--ease-ink);
+}
+
+.ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  /* compose scale + center-translate */
+  transform: translate(-50%, -50%) scale(0.55);
+  transition:
+    opacity 240ms var(--ease-ink),
+    transform 240ms var(--ease-ink);
+}
+
+.wrap[data-hovering="true"] .dot {
+  opacity: 0;
+}
+
+.wrap[data-hovering="true"] .ring {
+  opacity: 0.6;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+@media (hover: none), (max-width: 767px) {
+  .wrap {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wrap {
+    display: none;
+  }
+}

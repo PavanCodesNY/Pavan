@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@property --accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0b0b0a;
+}
+
+@property --rule-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  /* Ink / paper */
+  --ink: #0b0b0a;
+  --ink-muted: rgba(11, 11, 10, 0.6);
+  --ink-hush: rgba(11, 11, 10, 0.18);
+  --paper: #faf9f6;
+  --paper-pure: #ffffff;
+
+  /* Accent (orchestrated at runtime) */
+  --accent: var(--ink);
+  --accent-target: #c24e1b;
+
+  /* Revealed rule */
+  --rule-opacity: 0;
+
+  /* Layout */
+  --measure: 504px;
+  --chrome-pad: 24px;
+
+  /* Easings */
+  --ease-stroke: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-ink: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-breath: cubic-bezier(0.35, 0, 0.65, 1);
+
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body), "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 32px;
+  letter-spacing: -0.003em;
+  font-feature-settings: "kern", "liga", "onum";
+  hanging-punctuation: first last;
+  hyphens: none;
+  orphans: 2;
+  widows: 2;
+}
+
+body.bleed-links {
+  transition: --accent 1800ms var(--ease-ink);
+  --accent: var(--accent-target);
+}
+
+body.bleed-rule {
+  --rule-opacity: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--accent-target);
+  color: var(--paper);
+}
+
+.content-veil {
+  opacity: 0;
+  transition: opacity 450ms var(--ease-ink) 50ms;
+}
+
+.content-veil[data-loaded="true"] {
+  opacity: 1;
+}
+
+:where(html.has-custom-cursor) body,
+:where(html.has-custom-cursor) a,
+:where(html.has-custom-cursor) button {
+  cursor: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-veil,
+  .content-veil[data-loaded="false"] {
+    opacity: 1;
+  }
+}

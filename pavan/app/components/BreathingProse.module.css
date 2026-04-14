@@ -1,0 +1,69 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.para {
+  font-family: var(--font-body), Georgia, serif;
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 32px;
+  letter-spacing: -0.003em;
+  color: var(--ink);
+  margin: 0;
+  font-feature-settings: "kern", "liga", "onum";
+  text-wrap: pretty;
+}
+
+.word {
+  display: inline-block;
+  opacity: calc(0.82 + var(--breath, 0) * 0.18);
+  transition: opacity 120ms linear;
+}
+
+/* Layer 3: first-paragraph per-char clip-path reveal */
+.charPara .char {
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 380ms var(--ease-stroke);
+  transition-delay: calc(var(--i, 0) * 14ms);
+}
+.charPara.assembled .char {
+  clip-path: inset(0 0 0 0);
+}
+
+/* Fallback for 2nd/3rd paragraphs: simple fade-in */
+.simplePara {
+  opacity: 0;
+  transition: opacity 600ms var(--ease-ink);
+}
+.simplePara.assembled {
+  opacity: 1;
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 1800ms var(--ease-ink);
+}
+:global(body.bleed-links) .link {
+  border-bottom-color: var(--accent);
+}
+.link:focus-visible {
+  outline: 1px solid var(--accent-target);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charPara .char {
+    clip-path: none;
+    transition: none;
+  }
+  .simplePara {
+    opacity: 1;
+    transition: none;
+  }
+}
