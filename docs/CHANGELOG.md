@@ -4,6 +4,37 @@ Every entry lists all files touched and what changed in each, so parallel agents
 
 ---
 
+## 2026-04-15 — Add squiggly underlines, dark mode, avatar prank, and PKNY chat
+**PR**: [#4](https://github.com/PavanCodesNY/Pavan/pull/4) | **Merged into**: `main` | **Branch**: `PavanCodesNY/squiggly-prank`
+
+### Summary
+Added wavy blue underlines on all links, a dark/light mode toggle triggered by clicking the avatar (with typewriter easter egg), subtle avatar glow animation, chat typewriter fixes, and renamed the chat agent to PKNY with a refreshed system prompt.
+
+### Files Changed
+
+#### Modified
+- `pavan/app/components/MagneticLine.module.css` — Replaced `border-bottom` with `text-decoration: underline wavy` in blue (#2563eb), transitioning from transparent on bleed-links
+- `pavan/app/components/PretextText.module.css` — Same wavy blue underline treatment for body paragraph links
+- `pavan/app/components/Avatar.tsx` — Added dark/light mode prank: click triggers full-screen overlay with typewriter "hello again", then toggles theme. Merged with Framer Motion `motion.div` for hover/tap springs. Restores saved theme from localStorage on mount.
+- `pavan/app/components/Avatar.module.css` — Added subtle glow keyframe animation, theme-switch overlay styles (overlay, caret, prankText), and related keyframes. Removed CSS hover rule (Framer Motion handles it).
+- `pavan/app/globals.css` — Added `html.dark` CSS variables (ink, paper, chat-surface variants inverted), `color-scheme: dark`, and dark mode `::selection` styles
+- `pavan/app/layout.tsx` — Added inline `<script>` in `<head>` to apply dark class from localStorage before first paint (prevents FOUC). Added `suppressHydrationWarning` on `<html>`.
+- `pavan/app/components/Shell.tsx` — Added commented-out ArrowGuide import and render (WIP)
+- `pavan/app/components/ChatBar.tsx` — Renamed chat title to "PKNY", empty state to "Ask PKNY anything.", added `seen`/`onSeen` props to ChatMessage, tracks seen messages via Set ref to prevent typewriter replay
+- `pavan/app/components/ChatMessage.tsx` — Fixed typewriter: plays fully via `onComplete` callback instead of instant `setTimeout(0)`. Shows loading phrases during streaming instead of raw text. Moved synchronous setState out of effect body to fix React Compiler lint error.
+- `chat-api/system-prompt.js` — Rewrote system prompt: renamed agent to PKNY, added personality guidelines, example tone, and expanded bio details
+
+#### Created
+- `pavan/app/components/ArrowGuide.tsx` — Canvas-based animated arrow guide component (commented out, WIP)
+- `pavan/app/components/ArrowGuide.module.css` — Styles for arrow guide overlay (commented out, WIP)
+
+### Patterns Introduced
+- **Dark mode via class toggle**: `html.dark` class on `<html>` element, toggled via JS, persisted in localStorage. Inline head script prevents flash of wrong theme.
+- **Typewriter-once pattern**: ChatBar tracks seen message indices in a `Set` ref, passes `seen`/`onSeen` to ChatMessage so typewriter only plays on first render, not on re-mount.
+- **Wavy underlines**: `text-decoration: underline wavy` with `text-decoration-color` transition, decoupled from `--accent` to allow independent color (#2563eb blue).
+
+---
+
 ## 2026-04-15 — Performance enhancements + Claude Code chat integration
 **PR**: TBD | **Merged into**: `main` | **Branch**: `PavanCodesNY/istanbul-v2`
 
