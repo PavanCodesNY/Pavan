@@ -55,6 +55,23 @@ Defined in `pavan/app/globals.css` as CSS custom properties:
 | `--chat-surface-elevated` | `#f7f6f2` | Chat input area |
 | `--chat-user-bubble` | `rgba(11,11,10,0.03)` | User message bubble |
 
+### Dark Mode
+
+Toggled via `html.dark` class on `<html>`. All color tokens are overridden in `globals.css` under `html.dark, html.dark:root`. Includes `color-scheme: dark`.
+
+| Token | Dark Value |
+|-------|-----------|
+| `--ink` | `#faf9f6` |
+| `--ink-muted` | `rgba(250,249,246,0.6)` |
+| `--ink-hush` | `rgba(250,249,246,0.18)` |
+| `--paper` | `#0b0b0a` |
+| `--paper-pure` | `#000000` |
+| `--chat-surface` | `#141413` |
+| `--chat-surface-elevated` | `#1a1a19` |
+| `--chat-user-bubble` | `rgba(250,249,246,0.05)` |
+
+**Persistence**: Saved to `localStorage("theme")`. An inline `<script>` in `layout.tsx` `<head>` applies the class before first paint to prevent FOUC. Avatar click toggles the theme via a typewriter easter egg overlay.
+
 ### Easings
 | Token | Value |
 |-------|-------|
@@ -91,3 +108,4 @@ Two animation systems coexist:
 | Custom cursor | 80 | CustomCursor |
 | Chat widget | 60 | ChatBar |
 | Nav + Avatar | 40 | Nav, Avatar |
+| Theme overlay | 9999 | Avatar (prank overlay) |
