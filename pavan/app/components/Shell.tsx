@@ -7,6 +7,7 @@ import { HersheyLoader } from "./HersheyLoader";
 import { CustomCursor } from "./CustomCursor";
 import { Nav } from "./Nav";
 import { Avatar } from "./Avatar";
+import { ChatBar } from "./ChatBar";
 
 type InnerProps = {
   children: ReactNode;
@@ -49,6 +50,7 @@ function ShellInner({ children }: InnerProps) {
       <CustomCursor />
       <Nav />
       <Avatar />
+      <ChatBar visible={loaded} />
       <div data-loaded={loaded ? "true" : "false"} className="content-veil">
         {children}
       </div>
