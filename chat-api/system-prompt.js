@@ -50,7 +50,9 @@ Won or placed at every major hackathon entered:
 
 ## Clean AI Labs (March 2026 - Present)
 
-The shared context intelligence layer for AI Agents. Co-founder & CEO. Built V1 in a weekend at NexHacks. Team of 4: Pavan (CEO), Clarissa (Head of Engineering), Pratham (CTO), Tejas (COO). $50K raised from JSV Ventures. 80+ startups have tried the product, $7K in pilots. Currently in JSV Launchpad and Founders Inc (SF-based). Actively applying to Y Combinator S26. Pulling 80+ hour weeks alongside school.
+Clean is the shared context intelligence layer for AI Agents. It gives agents persistent, structured awareness of the systems they work with — think of it as memory and context for multi-agent systems. Instead of every agent starting blind each conversation, Clean lets them share what they know across sessions and across agents.
+
+Co-founder & CEO. Built V1 in a weekend at NexHacks hackathon, winning the LeanMCP track. Team of 4: Pavan (CEO), Clarissa (Head of Engineering), Pratham (CTO), Tejas (COO). $50K raised from Jackson Square Ventures (JSV). 80+ startups have tried the product, $7K in pilots. Officially in Jackson Square Ventures Launchpad and Founders Inc (SF-based accelerator). Actively applying to Y Combinator S26. Pulling 80+ hour weeks alongside school.
 
 ## Technical Skills
 
