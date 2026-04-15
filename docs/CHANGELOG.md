@@ -4,6 +4,86 @@ Every entry lists all files touched and what changed in each, so parallel agents
 
 ---
 
+## 2026-04-15 — Post-merge fixes, Vercel deployment, Cloudflare Tunnel, iOS Shortcut
+**Commits**: `e0d1c68`..`2d8c695` + `highlight-bot` commits | **Direct to**: `main`
+
+### Summary
+Series of fixes after PR #6 merge: Framer Motion nav animations, lint fixes, page transitions (added then removed — too slow), Vercel deployment with custom domain, Cloudflare Tunnel for chat API, iOS Shortcut for highlight pipeline, and scraper bug fixes for X/Twitter posts.
+
+### Files Changed
+
+#### Modified
+- `pavan/app/components/Nav.tsx` — Added `LayoutGroup id="main-nav"` wrapper to isolate layoutId from PlaygroundNav. Fixed active matching: Playground pill now uses `startsWith` so it stays active on sub-routes.
+- `pavan/app/components/Nav.module.css` — Removed `background` from active state (handled by motion.span activeBg)
+- `pavan/app/components/Shell.tsx` — Added then removed PageTransition wrapper (caused visible delay on route changes)
+- `pavan/app/playground/components/PlaygroundNav.tsx` — Added Framer Motion `layoutId="playground-tab-active"` sliding indicator with spring physics. Wrapped in `LayoutGroup id="playground-tabs"` to prevent cross-contamination with main Nav.
+- `pavan/app/playground/components/PlaygroundNav.module.css` — Added `isolation: isolate` on `.tab` to fix z-index stacking for activeBg. Added `.activeBg` and `.label` classes for layered sliding indicator.
+- `pavan/app/playground/layout.tsx` — Added PageEnter wrapper for smooth entrance animation. Removed PlaygroundTransition (was causing pop-in/pop-out).
+- `pavan/app/playground/hire-me/page.tsx` — Escaped apostrophe: `I'll` → `I&apos;ll` (ESLint `react/no-unescaped-entities`)
+- `pavan/app/playground/highlights/HighlightCard.tsx` — Moved image above text in card layout
+- `pavan/app/globals.css` — Added `scroll-behavior: smooth` on `html`
+- `pavan/scripts/add-highlight.ts` — Added URL validation (rejects non-URLs). Added fxtwitter JSON API fallback for X posts (X blocks og meta tags for bots). Tries `og:description`, `twitter:description`, `description` meta tags before fallback.
+- `.github/workflows/add-highlight.yml` — Added `permissions: contents: write` (GitHub Actions bot couldn't push without it)
+- `chat-api/server.js` — Changed chat endpoint from `POST /chat` to `POST /` for cleaner URL (`chat.pavankumarny.me` instead of `chat.pavankumarny.me/chat`)
+
+#### Created
+- `pavan/app/components/PageEnter.tsx` — Client component: gentle fade + 8px slide-up on mount (400ms, ease-ink curve). No exit animation — navigation stays instant.
+- `pavan/content/highlights/2026-04-15-here-we-go-fdotinc-if-you-are-a-builder-.md` — First highlight added via iOS Shortcut pipeline (X post, auto-scraped)
+- `pavan/public/highlights/2026-04-15-here-we-go-fdotinc-if-you-are-a-builder-.jpg` — Auto-downloaded image from X post via fxtwitter API
+
+#### Deleted
+- `pavan/app/components/PageTransition.tsx` — Removed: AnimatePresence mode="wait" caused visible delay between Home ↔ Playground
+- `pavan/app/playground/components/PlaygroundTransition.tsx` — Removed: same issue within playground tabs
+
+### Bugs Found & Fixed
+
+1. **ESLint `react/no-unescaped-entities`** — `I'll` in hire-me page. Fix: `I&apos;ll`
+2. **PlaygroundNav active tab invisible** — `z-index: -1` on activeBg was clipped by parent stacking context. Fix: added `isolation: isolate` on `.tab`
+3. **Nav ↔ PlaygroundNav layoutId clash** — Both navs shared the same Framer Motion layout context, causing the active pill to teleport between them on route change. Fix: wrapped each in separate `LayoutGroup` with unique `id`
+4. **Nav Playground pill not active on sub-routes** — `pathname === "/playground"` didn't match `/playground/public`. Fix: `pathname.startsWith("/playground")`
+5. **AnimatePresence page transitions too slow** — `mode="wait"` blocks new page until exit completes, creating visible pop-in/pop-out. Fix: removed entirely, replaced with mount-only `PageEnter` animation
+6. **Vercel 404 NOT_FOUND** — Framework not detected (showed as "Other" instead of "Next.js") because `package.json` is in `pavan/` subdirectory, not repo root. Fix: manually set Framework Preset to Next.js in Vercel Build & Deployment settings
+7. **Cloudflare proxy conflict** — Orange cloud (proxy enabled) caused SSL conflicts with Vercel. Fix: 1-click fix in Vercel to disable Cloudflare proxy (DNS only / grey cloud)
+8. **GitHub Action push permission denied** — `github-actions[bot]` can't push by default. Fix: added `permissions: contents: write` to workflow YAML
+9. **iOS Shortcut sent text instead of URL** — User typed "It's the one with the latest copied link" instead of pasting URL. Fix: added URL validation (`/^https?:\/\/.+/`) with clear error message
+10. **X/Twitter scraping fails** — X blocks all og/meta tags for server-side scrapers. `fxtwitter.com` HTML also strips them. Fix: use `api.fxtwitter.com` JSON API which returns `tweet.text` and `tweet.media.photos[0].url`
+11. **Chat API endpoint mismatch** — Frontend fetched `NEXT_PUBLIC_CHAT_API_URL` directly, but server expected `/chat` path. Fix: changed server endpoint from `POST /chat` to `POST /` so `chat.pavankumarny.me` works without path suffix
+
+### Infrastructure Setup
+
+#### Vercel Deployment
+- **Project**: PavanCodesNY/Pavan on Vercel
+- **Root Directory**: `pavan` (not `./` — the Next.js app is in a subdirectory)
+- **Framework Preset**: Next.js (must be set manually — auto-detect fails for subdirectory projects)
+- **Environment Variables**: `NEXT_PUBLIC_CHAT_API_URL` = `https://chat.pavankumarny.me`
+- **Auto-deploy**: Pushes to `main` trigger rebuild + deploy
+
+#### Custom Domain (Cloudflare DNS → Vercel)
+- `pavankumarny.me` → A record `76.76.21.21` (Cloudflare proxy OFF)
+- `www.pavankumarny.me` → CNAME `cname.vercel-dns.com` (Cloudflare proxy OFF)
+- **Critical**: Cloudflare proxy must be OFF (grey cloud). Vercel handles SSL. Orange cloud causes certificate conflicts.
+
+#### Chat API (Docker + Cloudflare Tunnel)
+- **Container**: `docker compose up -d --build` in `chat-api/`
+- **Port mapping**: host 3099 → container 3001
+- **Claude auth**: `docker exec -it chat-api claude auth login` (one-time, tokens persist in `claude-auth` Docker volume)
+- **Cloudflare Tunnel setup**:
+  1. `brew install cloudflare/cloudflare/cloudflared`
+  2. `cloudflared tunnel login` (authenticates via browser, select `pavankumarny.me`)
+  3. `cloudflared tunnel create chat-api` (creates tunnel + credentials JSON)
+  4. Config at `~/.cloudflared/config.yml`: tunnel ID, credentials path, ingress `chat.pavankumarny.me` → `http://localhost:3099`
+  5. `cloudflared tunnel route dns chat-api chat.pavankumarny.me` (adds CNAME in Cloudflare)
+  6. `cloudflared tunnel run chat-api` (starts tunnel)
+  7. `sudo cloudflared service install` (survives reboots)
+
+#### iOS Shortcut ("Add Highlight")
+- **Action 1**: Ask for Input → "Paste the Post URL" (type: URL)
+- **Action 2**: Dispatch Workflow → Owner: `PavanCodesNY`, Workflow ID: `add-highlight.yml`, Repository: `Pavan`, Branch: `main`, Inputs: `{"url":"[Ask for Input]"}`, Account: `PavanCodesNY`
+- **Action 3**: Show Notification → "Highlight Added!"
+- **Pipeline**: Shortcut → GitHub API → Action runs scraper → commits .md + image → pushes to main → Vercel auto-deploys → live in ~60 seconds
+
+---
+
 ## 2026-04-15 — Playground blog hub with highlights pipeline
 **PR**: [#6](https://github.com/PavanCodesNY/Pavan/pull/6) | **Merged into**: `main` | **Branch**: `PavanCodesNY/playground-blog`
 
