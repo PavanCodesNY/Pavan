@@ -46,8 +46,6 @@ export function HighlightCard({ highlight }: { highlight: Highlight }) {
         <time className={styles.date}>{highlight.date}</time>
       </div>
 
-      <HighlightBody content={highlight.content} />
-
       {highlight.image && (
         <div className={styles.imageWrap}>
           <Image
@@ -59,6 +57,8 @@ export function HighlightCard({ highlight }: { highlight: Highlight }) {
           />
         </div>
       )}
+
+      <HighlightBody content={highlight.content} />
 
       {highlight.url && (
         <a
