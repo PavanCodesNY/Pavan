@@ -99,10 +99,14 @@ function TypewriterMessage({ content, onComplete }: { content: string; onComplet
 
   useEffect(() => {
     indexRef.current = 0;
-    setDisplayed("");
-    setDone(false);
+    let started = false;
 
     const timer = setInterval(() => {
+      if (!started) {
+        started = true;
+        setDisplayed("");
+        setDone(false);
+      }
       const charsToAdd = content[indexRef.current] === " " ? 2 : 1;
       indexRef.current = Math.min(indexRef.current + charsToAdd, content.length);
       setDisplayed(content.slice(0, indexRef.current));
