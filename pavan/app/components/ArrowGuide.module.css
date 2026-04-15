@@ -1,0 +1,42 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 600ms var(--ease-ink);
+}
+
+.fadeOut {
+  opacity: 0;
+}
+
+.path {
+  fill: none;
+  stroke: var(--ink-hush);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-dasharray: 6 4;
+}
+
+.arrowhead {
+  fill: var(--ink-hush);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-ink);
+}
+
+.arrowheadVisible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .overlay {
+    display: none;
+  }
+}
