@@ -8,8 +8,6 @@ import { CustomCursor } from "./CustomCursor";
 import { Nav } from "./Nav";
 import { Avatar } from "./Avatar";
 
-const SESSION_KEY = "pk-loader-seen";
-
 type InnerProps = {
   children: ReactNode;
 };
@@ -18,14 +16,11 @@ function ShellInner({ children }: InnerProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  // Decide loader state on mount. Using lazy init so we don't flash an
-  // incorrect state between first render and the useEffect in HersheyLoader.
-  const [loaded, setLoaded] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    if (!isHome) return true;
-    if (window.sessionStorage.getItem(SESSION_KEY) === "1") return true;
-    return false;
-  });
+  // Lazy init based on pathname alone — deterministic on server and client.
+  // The loader plays on every reload of the home route. Client-side navigation
+  // between Home ↔ Playground keeps the same state (loaded persists once true),
+  // so the loader doesn't replay within a single SPA session, only on reload.
+  const [loaded, setLoaded] = useState(() => !isHome);
 
   // Color bleed orchestration: chain of timers that reveal the accent layers
   // progressively after the content is visible.
@@ -46,14 +41,7 @@ function ShellInner({ children }: InnerProps) {
     };
   }, [loaded]);
 
-  const onLoaderComplete = () => {
-    try {
-      window.sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* ignore: private mode / disabled storage */
-    }
-    setLoaded(true);
-  };
+  const onLoaderComplete = () => setLoaded(true);
 
   return (
     <>

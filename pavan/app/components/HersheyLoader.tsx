@@ -9,13 +9,14 @@ type Props = {
   onComplete: () => void;
 };
 
-type PreparedStroke = {
+type PreparedLetter = {
   key: string;
-  d: string;
-  xOffset: number;
+  path: string;
+  letterIdx: number;
+  isEmpty: boolean;
 };
 
-const LETTER_SPACING = 3;
+const LETTER_SPACING = 4;
 const WORD_SPACE = 8;
 
 export function HersheyLoader({ text = "Pavan Kumar", onComplete }: Props) {
@@ -32,22 +33,17 @@ export function HersheyLoader({ text = "Pavan Kumar", onComplete }: Props) {
     [text],
   );
 
-  const strokes = useMemo<PreparedStroke[]>(() => {
-    const out: PreparedStroke[] = [];
-    for (const char of layout.chars) {
-      char.strokes.forEach((d, i) => {
-        out.push({
-          key: `${char.char}-${char.xOffset}-${i}`,
-          d,
-          xOffset: char.xOffset,
-        });
-      });
-    }
-    return out;
+  const letters = useMemo<PreparedLetter[]>(() => {
+    return layout.chars.map((char, i) => ({
+      key: `${char.char}-${i}`,
+      path: char.path,
+      letterIdx: i,
+      isEmpty: char.path.trim().length === 0,
+    }));
   }, [layout]);
 
-  const padX = 6;
-  const padY = 4;
+  const padX = 8;
+  const padY = 6;
   const vbX = -padX;
   const vbY = layout.minY - padY;
   const vbW = layout.width + padX * 2;
@@ -59,74 +55,102 @@ export function HersheyLoader({ text = "Pavan Kumar", onComplete }: Props) {
     if (!overlay || !svg) return;
     if (doneRef.current) return;
 
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     let finishTimer = 0;
     let fadeTimer = 0;
-    let rafId: number | null = null;
+    const rafIds: number[] = [];
 
     const finish = () => {
       if (doneRef.current) return;
       doneRef.current = true;
       overlay.classList.add(styles.fading);
-      fadeTimer = window.setTimeout(() => onCompleteRef.current(), 480);
+      fadeTimer = window.setTimeout(() => onCompleteRef.current(), 520);
     };
 
     if (reduced) {
-      overlay.classList.add(styles.writing);
-      finishTimer = window.setTimeout(finish, 450);
+      // Reveal everything statically and fade out shortly.
+      const paths = svg.querySelectorAll<SVGPathElement>("path");
+      paths.forEach((p) => {
+        p.style.strokeDasharray = "none";
+        p.style.strokeDashoffset = "0";
+      });
+      finishTimer = window.setTimeout(finish, 600);
     } else {
-      const paths = Array.from(
-        svg.querySelectorAll<SVGPathElement>(`.${styles.stroke}`),
-      );
-      const GAP_BETWEEN_STROKES = 18;
-      const GAP_BETWEEN_LETTERS = 36;
+      const paths = Array.from(svg.querySelectorAll<SVGPathElement>("path"));
+
+      // Per-letter timing. Each letter is one continuous merged path that
+      // traces in one fluid sweep; letters fire sequentially so the eye
+      // sees the word being written one letter at a time.
+      const LEN_TO_MS = 14;
+      const MIN_LETTER_MS = 260;
+      const LETTER_GAP_MS = 70;
+      const WORD_GAP_MS = 220;
+      const EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+
       let totalMs = 0;
-      let prevXOffset: number | null = null;
+      let pathIdx = 0;
 
-      paths.forEach((path, i) => {
-        const len = path.getTotalLength();
-        const dur = Math.max(140, len * 26);
-        const xOffset = Number(path.dataset.xoffset);
-        if (prevXOffset !== null && xOffset !== prevXOffset) {
-          totalMs += GAP_BETWEEN_LETTERS;
-        } else if (i > 0) {
-          totalMs += GAP_BETWEEN_STROKES;
+      // Walk the FULL letter list (including spaces) so empty glyphs still
+      // advance the clock for the word gap.
+      for (let i = 0; i < letters.length; i++) {
+        const letter = letters[i];
+        const isWordBoundary = letter.isEmpty;
+
+        if (i > 0) {
+          totalMs += isWordBoundary ? WORD_GAP_MS : LETTER_GAP_MS;
         }
-        path.style.setProperty("--len", `${len}`);
-        path.style.setProperty("--dur", `${dur}ms`);
-        path.style.setProperty("--delay", `${totalMs}ms`);
-        totalMs += dur;
-        prevXOffset = xOffset;
-      });
 
-      // Two rAF ticks to guarantee initial offsets are committed before the
-      // transition kicks in (otherwise some browsers skip the animation).
-      rafId = requestAnimationFrame(() => {
-        rafId = requestAnimationFrame(() => {
-          overlay.classList.add(styles.writing);
-        });
-      });
+        if (!letter.isEmpty) {
+          const path = paths[pathIdx];
+          pathIdx++;
+          const len = path.getTotalLength();
+          const dur = Math.max(MIN_LETTER_MS, Math.round(len * LEN_TO_MS));
 
-      const holdMs = 220;
+          // Initial state: invisible (dashoffset = full length).
+          path.style.strokeDasharray = `${len}`;
+          path.style.strokeDashoffset = `${len}`;
+          // Transition kicks in when we set strokeDashoffset to 0 below.
+          path.style.transition = `stroke-dashoffset ${dur}ms ${EASING} ${totalMs}ms`;
+
+          totalMs += dur;
+        }
+      }
+
+      // Force the browser to commit the initial dasharray/dashoffset/transition
+      // state before we flip strokeDashoffset to 0. Without this commit the
+      // browser may collapse the two updates into one frame and skip the
+      // animation entirely (the path appears fully drawn instantly).
+      // Reading offsetWidth forces a synchronous layout flush.
+      void svg.getBoundingClientRect();
+
+      rafIds.push(
+        requestAnimationFrame(() => {
+          rafIds.push(
+            requestAnimationFrame(() => {
+              for (const path of paths) {
+                path.style.strokeDashoffset = "0";
+              }
+            }),
+          );
+        }),
+      );
+
+      const holdMs = 320;
       finishTimer = window.setTimeout(finish, totalMs + holdMs);
     }
 
     return () => {
-      if (rafId != null) cancelAnimationFrame(rafId);
+      rafIds.forEach((id) => cancelAnimationFrame(id));
       if (finishTimer) window.clearTimeout(finishTimer);
       if (fadeTimer) window.clearTimeout(fadeTimer);
     };
-  }, []);
+  }, [letters]);
 
   return (
-    <div
-      ref={overlayRef}
-      className={styles.overlay}
-      aria-hidden="false"
-    >
+    <div ref={overlayRef} className={styles.overlay} aria-hidden="false">
       <svg
         ref={svgRef}
         className={styles.svg}
@@ -134,14 +158,23 @@ export function HersheyLoader({ text = "Pavan Kumar", onComplete }: Props) {
         role="img"
         aria-label={text}
       >
-        {strokes.map((s) => (
-          <path
-            key={s.key}
-            className={styles.stroke}
-            d={s.d}
-            data-xoffset={s.xOffset}
-          />
-        ))}
+        {letters.map((l) =>
+          l.isEmpty ? null : (
+            <path
+              key={l.key}
+              className={styles.stroke}
+              d={l.path}
+              data-letter={l.letterIdx}
+              // Inline initial state so SSR + first client render show the
+              // path as invisible. JS overwrites with the measured length on
+              // mount.
+              style={{
+                strokeDasharray: 1,
+                strokeDashoffset: 1,
+              }}
+            />
+          ),
+        )}
       </svg>
     </div>
   );

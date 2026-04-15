@@ -3,14 +3,16 @@ import glyphs from "./glyphs.json";
 export type GlyphData = {
   left: number;
   right: number;
-  strokes: string[];
+  /** One continuous SVG path (merged strokes + smooth connectors). */
+  path: string;
 };
 
 export const GLYPHS: Record<string, GlyphData> = glyphs as Record<string, GlyphData>;
 
 export type LaidOutChar = {
   char: string;
-  strokes: string[];
+  /** Path with x coordinates shifted so the glyph's `left` lands at `xOffset`. */
+  path: string;
   xOffset: number;
   width: number;
 };
@@ -22,15 +24,6 @@ export type StringLayout = {
   maxY: number;
 };
 
-/**
- * Compute per-character x offsets for a string. The Hershey coord system
- * puts each glyph's center near x=0 with negative `left` and positive `right`.
- * We shift each glyph to place its own left at x=0 relative to its slot,
- * then accumulate slot widths to produce absolute x offsets.
- *
- * `letterSpacing` is extra space between adjacent letters.
- * `wordSpace` is the extra width added for a space glyph (on top of its own).
- */
 export function layoutString(
   s: string,
   letterSpacing = 2,
@@ -45,19 +38,18 @@ export function layoutString(
     const g = GLYPHS[ch];
     if (!g) continue;
     const width = g.right - g.left + (ch === " " ? wordSpace : 0);
-    // shift glyph so its internal `left` lands at cursorX
     const shift = cursorX - g.left;
-    const shiftedStrokes = g.strokes.map((d) => shiftPathX(d, shift));
+    const shiftedPath = g.path ? shiftPathX(g.path, shift) : "";
     chars.push({
       char: ch,
-      strokes: shiftedStrokes,
+      path: shiftedPath,
       xOffset: cursorX,
       width,
     });
     cursorX += width + letterSpacing;
 
-    for (const d of g.strokes) {
-      for (const [, y] of extractPairs(d)) {
+    if (g.path) {
+      for (const [, y] of extractPairs(g.path)) {
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
       }
@@ -73,7 +65,10 @@ export function layoutString(
 }
 
 function extractPairs(d: string): Array<[number, number]> {
-  // d looks like: "M 1 -10 L 2 -9 L 2 -6 ..."
+  // Walk tokens looking for M/L/Q commands and pull their endpoint coordinates.
+  // For Q we only use the endpoint (last two numbers) since the control point
+  // can stick slightly outside the glyph bounds — those shouldn't inflate the
+  // viewBox.
   const out: Array<[number, number]> = [];
   const tokens = d.split(/\s+/).filter(Boolean);
   for (let i = 0; i < tokens.length; i++) {
@@ -83,6 +78,12 @@ function extractPairs(d: string): Array<[number, number]> {
       const y = Number(tokens[i + 2]);
       if (!Number.isNaN(x) && !Number.isNaN(y)) out.push([x, y]);
       i += 2;
+    } else if (t === "Q") {
+      // Q cx cy x y — skip control, keep endpoint.
+      const x = Number(tokens[i + 3]);
+      const y = Number(tokens[i + 4]);
+      if (!Number.isNaN(x) && !Number.isNaN(y)) out.push([x, y]);
+      i += 4;
     }
   }
   return out;
@@ -98,6 +99,13 @@ function shiftPathX(d: string, dx: number): string {
       const y = Number(tokens[i + 2]);
       out.push(t, String(x), String(y));
       i += 2;
+    } else if (t === "Q") {
+      const cx = Number(tokens[i + 1]) + dx;
+      const cy = Number(tokens[i + 2]);
+      const x = Number(tokens[i + 3]) + dx;
+      const y = Number(tokens[i + 4]);
+      out.push(t, String(cx), String(cy), String(x), String(y));
+      i += 4;
     } else {
       out.push(t);
     }

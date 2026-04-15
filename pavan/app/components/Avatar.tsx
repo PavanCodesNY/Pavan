@@ -14,7 +14,7 @@ export function Avatar() {
         </span>
       ) : (
         <Image
-          src="/avatar.jpg"
+          src="/avatar.png"
           alt="Pavan Kumar"
           width={40}
           height={40}
