@@ -1,0 +1,134 @@
+.message {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  max-width: 85%;
+  word-break: break-word;
+}
+
+.user {
+  align-self: flex-end;
+  background: var(--chat-user-bubble);
+  color: var(--ink);
+}
+
+.assistant {
+  align-self: flex-start;
+  color: var(--ink);
+}
+
+.loading {
+  color: var(--ink-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Streaming cursor */
+.cursor {
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  background: var(--ink-muted);
+  border-radius: 1px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Markdown prose styles for completed assistant messages */
+.prose p {
+  margin: 0 0 8px;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  background: var(--chat-user-bubble);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.prose pre {
+  background: rgba(11, 11, 10, 0.04);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.prose a {
+  color: var(--accent-target);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+
+.prose li {
+  margin: 2px 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  margin: 12px 0 6px;
+}
+
+.prose h1 { font-size: 16px; }
+.prose h2 { font-size: 15px; }
+.prose h3 { font-size: 14px; }
+
+.prose blockquote {
+  border-left: 2px solid var(--ink-hush);
+  padding-left: 12px;
+  color: var(--ink-muted);
+  margin: 8px 0;
+}
+
+.prose table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--ink-hush);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.prose th {
+  font-weight: 500;
+  background: rgba(11, 11, 10, 0.03);
+}

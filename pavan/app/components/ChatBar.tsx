@@ -2,10 +2,13 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChatMessage } from "./ChatMessage";
 import styles from "./ChatBar.module.css";
 
 type Status = "compact" | "bar" | "expanded";
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { role: "user" | "assistant"; content: string; isStreaming?: boolean };
+
+const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "/api/chat";
 
 const spring = {
   type: "spring" as const,
@@ -31,10 +34,12 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sizes, setSizes] = useState(SIZES);
+  const [isStreaming, setIsStreaming] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const barInputRef = useRef<HTMLTextAreaElement>(null);
   const panelInputRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Recompute sizes on resize
   useEffect(() => {
@@ -55,6 +60,11 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Abort streaming on unmount
+  useEffect(() => {
+    return () => { abortRef.current?.abort(); };
+  }, []);
+
   // Hover → expand to bar (or expanded if has history)
   const handleMouseEnter = useCallback(() => {
     if (status === "compact") {
@@ -62,26 +72,108 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
     }
   }, [status, messages.length]);
 
-  // Mouse leave → always collapse back to compact
+  // Mouse leave → collapse (but not while streaming)
   const handleMouseLeave = useCallback(() => {
-    if (status !== "compact") setStatus("compact");
-  }, [status]);
+    if (status !== "compact" && !isStreaming) setStatus("compact");
+  }, [status, isStreaming]);
 
   const forceCollapse = useCallback(() => {
+    abortRef.current?.abort();
     setStatus("compact");
   }, []);
 
-  // Send message: transition bar → expanded
+  // Stream assistant response
+  const streamResponse = useCallback(async (allMessages: Message[]) => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setIsStreaming(true);
+
+    // Add placeholder assistant message
+    const assistantIdx = allMessages.length;
+    setMessages([...allMessages, { role: "assistant", content: "", isStreaming: true }]);
+
+    try {
+      // Send only role + content (strip isStreaming)
+      const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
+
+      const res = await fetch(CHAT_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: apiMessages }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[assistantIdx] = {
+            role: "assistant",
+            content: "Sorry, I couldn\u2019t connect right now. Please try again later.",
+            isStreaming: false,
+          };
+          return updated;
+        });
+        setIsStreaming(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+        const current = accumulated;
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[assistantIdx] = { role: "assistant", content: current, isStreaming: true };
+          return updated;
+        });
+      }
+
+      // Mark streaming complete
+      const final = accumulated;
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[assistantIdx] = { role: "assistant", content: final, isStreaming: false };
+        return updated;
+      });
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[assistantIdx] = {
+            role: "assistant",
+            content: "Something went wrong. Please try again.",
+            isStreaming: false,
+          };
+          return updated;
+        });
+      }
+    } finally {
+      setIsStreaming(false);
+      abortRef.current = null;
+    }
+  }, []);
+
+  // Send message
   const send = useCallback(() => {
     const text = input.trim();
-    if (!text) return;
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    if (!text || isStreaming) return;
+
+    const userMessage: Message = { role: "user", content: text };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
+
     if (status === "bar") setStatus("expanded");
     if (barInputRef.current) barInputRef.current.style.height = "auto";
     if (panelInputRef.current) panelInputRef.current.style.height = "auto";
-    // TODO: send to Claude API and stream assistant response
-  }, [input, status]);
+
+    streamResponse(newMessages);
+  }, [input, isStreaming, messages, status, streamResponse]);
 
   // Focus inputs after state transitions
   useEffect(() => {
@@ -259,16 +351,12 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
                 </div>
               ) : (
                 messages.map((msg, i) => (
-                  <div
+                  <ChatMessage
                     key={i}
-                    className={`${styles.message} ${
-                      msg.role === "user"
-                        ? styles.messageUser
-                        : styles.messageAssistant
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
+                    role={msg.role}
+                    content={msg.content}
+                    isStreaming={msg.isStreaming}
+                  />
                 ))
               )}
             </div>
@@ -282,13 +370,15 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message…"
                 rows={1}
+                disabled={isStreaming}
               />
               <button
                 className={styles.send}
                 onClick={send}
                 aria-label="Send message"
-                data-active={hasInput ? "true" : "false"}
+                data-active={hasInput && !isStreaming ? "true" : "false"}
                 data-cursor=""
+                disabled={isStreaming}
               >
                 <svg
                   className={styles.sendIcon}

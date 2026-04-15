@@ -4,6 +4,48 @@ Every entry lists all files touched and what changed in each, so parallel agents
 
 ---
 
+## 2026-04-15 — Performance enhancements + Claude Code chat integration
+**PR**: TBD | **Merged into**: `main` | **Branch**: `PavanCodesNY/istanbul-v2`
+
+### Summary
+Enabled React Compiler for auto-memoization. Added streaming Claude Code chat integration via Docker backend using the user's CLI subscription. Added streaming-aware markdown rendering with Gen Z typewriter loading animation. Created full Docker backend with Cloudflare Tunnel setup for zero-cost hosting.
+
+### Files Changed
+
+#### Created
+- `pavan/app/components/ChatMessage.tsx` — New component for rendering chat messages. User messages render plain text. Assistant messages show Gen Z loading phrases while waiting, typewriter animation on first response, then full markdown (react-markdown + remark-gfm) after completion.
+- `pavan/app/components/ChatMessage.module.css` — Styles for message bubbles, streaming cursor blink animation, loading phrase italic style, and markdown prose (headings, code, links, lists, tables, blockquotes).
+- `pavan/.env.example` — Documents `NEXT_PUBLIC_CHAT_API_URL` env var pointing to Docker backend at `chat.pavankumarny.me`.
+- `chat-api/server.js` — Express server using `@anthropic-ai/claude-code` SDK `query()` function. POST `/chat` endpoint accepts messages array, streams assistant response as chunked text. CORS configured for allowed origins.
+- `chat-api/system-prompt.js` — System prompt for the AI persona with Pavan's bio and response guidelines.
+- `chat-api/package.json` — Backend dependencies: `@anthropic-ai/claude-code`, `cors`, `express`.
+- `chat-api/Dockerfile` — Node 22 slim image with Claude CLI installed globally, exposes port 3001.
+- `chat-api/docker-compose.yml` — Docker Compose config with restart always, port 3099:3001, claude-auth volume, CORS origins for localhost and pavankumarny.me.
+- `chat-api/README.md` — Setup guide: Docker build, Claude auth, Cloudflare Tunnel to `chat.pavankumarny.me`, pm2 alternative, environment variables.
+- `chat-api/.gitignore` — Ignores node_modules.
+
+#### Modified
+- `pavan/next.config.ts` — Added `reactCompiler: true` for automatic component memoization.
+- `pavan/app/components/ChatBar.tsx` — Replaced TODO with streaming fetch to `NEXT_PUBLIC_CHAT_API_URL`. Added `isStreaming` state, AbortController for cleanup, disabled input during streaming, prevents collapse during streaming. Uses ChatMessage component instead of inline message rendering.
+- `pavan/app/components/ChatBar.module.css` — Removed `.message`, `.messageUser`, `.messageAssistant` rules (migrated to ChatMessage.module.css).
+- `pavan/package.json` — Added `react-markdown`, `remark-gfm`, `babel-plugin-react-compiler` dependencies.
+- `pavan/package-lock.json` — Lock file updated with new dependencies.
+
+### Dependencies Changed
+- Added `react-markdown@^9` — Markdown rendering for assistant messages
+- Added `remark-gfm` — GitHub Flavored Markdown support (tables, strikethrough, etc.)
+- Added `babel-plugin-react-compiler` (devDep) — Required by Next.js `reactCompiler` config
+- Backend: `@anthropic-ai/claude-code`, `express@5`, `cors`
+
+### Patterns Introduced
+- **Streaming-aware rendering**: During streaming show raw text, after completion render full markdown. Prevents re-parsing AST on every token.
+- **Typewriter animation**: `useTypewriter` hook for character-by-character reveal on first response only (not on re-renders).
+- **Loading phrases**: `useLoadingPhrases` hook cycles through Gen Z phrases with type/erase animation while waiting for API response.
+- **Docker backend for CLI subscription**: Chat API runs as Docker container on local machine, exposed via Cloudflare Tunnel. Uses `query()` from `@anthropic-ai/claude-code` SDK — no API key needed.
+- **`NEXT_PUBLIC_CHAT_API_URL`**: Configurable chat backend URL via environment variable.
+
+---
+
 ## 2026-04-15 — Add auto-documentation and CI/CD pipeline
 **PR**: TBD | **Merged into**: `main` | **Branch**: `PavanCodesNY/istanbul-v1`
 

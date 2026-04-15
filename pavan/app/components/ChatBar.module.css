@@ -135,26 +135,6 @@
   padding: 0 20px;
 }
 
-.message {
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 20px;
-  max-width: 85%;
-  word-break: break-word;
-}
-
-.messageUser {
-  align-self: flex-end;
-  background: var(--chat-user-bubble);
-  color: var(--ink);
-}
-
-.messageAssistant {
-  align-self: flex-start;
-  color: var(--ink);
-}
-
 /* Shared input styles */
 
 .input {
