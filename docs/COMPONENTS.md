@@ -71,6 +71,28 @@ All components live in `pavan/app/components/`. Every component uses CSS Modules
 - **Purpose**: Page footer with rule line
 - **Animation**: Rule opacity controlled by `--rule-opacity` CSS property (set by Shell bleed timing)
 
+## Playground Components (used in /playground routes)
+
+### PlaygroundNav
+- **Path**: `app/playground/components/PlaygroundNav.tsx` + `PlaygroundNav.module.css`
+- **Purpose**: Tab navigation for playground sub-pages (Public, Hire Me, Highlights)
+- **Animation**: None — pill transitions only (border-color, background, color)
+- **Props**: None (reads pathname via `usePathname`, uses `startsWith` for active matching)
+
+### HighlightCard
+- **Path**: `app/playground/highlights/HighlightCard.tsx`
+- **Purpose**: Unified outline card for social media posts (LinkedIn, X, Instagram)
+- **Sub-components**: `PlatformIcon` (inline SVG icons, 14px)
+- **Props**: `highlight: Highlight` (platform, date, content, optional url/image)
+- **Image**: Uses `next/image` with `fill` + `sizes` for optimization
+
+### HighlightBody
+- **Path**: `app/playground/highlights/HighlightBody.tsx`
+- **Purpose**: Post text with 5-line truncation and expand/collapse toggle
+- **Animation**: None — CSS `-webkit-line-clamp` for truncation
+- **Props**: `content: string`
+- **Behavior**: Detects overflow via `scrollHeight > clientHeight`, shows "Read more"/"Read less" button
+
 ## Context Providers
 
 ### PointerProvider

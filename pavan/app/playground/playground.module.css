@@ -1,0 +1,8 @@
+.column {
+  width: min(var(--measure), calc(100vw - 48px));
+  margin-inline: auto;
+  padding-top: clamp(128px, 22vh, 192px);
+  padding-bottom: 96px;
+  display: flex;
+  flex-direction: column;
+}

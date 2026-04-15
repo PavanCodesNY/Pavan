@@ -4,6 +4,54 @@ Every entry lists all files touched and what changed in each, so parallel agents
 
 ---
 
+## 2026-04-15 — Playground blog hub with highlights pipeline
+**PR**: [#6](https://github.com/PavanCodesNY/Pavan/pull/6) | **Merged into**: `main` | **Branch**: `PavanCodesNY/playground-blog`
+
+### Summary
+Turned `/playground` from a "Soon." placeholder into a tabbed content hub with three sections: Public (blog), Hire Me (recruiter page), and Highlights (unified social cards for LinkedIn/X/Instagram). Highlights are powered by markdown files in `content/highlights/` read at build time. Added a scraper script and GitHub Action so new highlights can be added from an iOS Shortcut — paste a URL, auto-scrape text + image, commit, Vercel deploys.
+
+### Files Changed
+
+#### Modified
+- `pavan/app/playground/page.tsx` — Replaced "Soon." placeholder with `redirect("/playground/public")`
+- `pavan/tsconfig.json` — Added `"scripts"` to `exclude` array (prevents BigInt build errors from scraper)
+
+#### Created
+- `pavan/app/playground/layout.tsx` — Shared playground layout with PlaygroundNav + Footer
+- `pavan/app/playground/playground.module.css` — Column layout matching home page pattern
+- `pavan/app/playground/components/PlaygroundNav.tsx` — Client component: 3 pill-style tabs (Public, Hire Me, Highlights) with active state via `usePathname`
+- `pavan/app/playground/components/PlaygroundNav.module.css` — Tab styles matching Nav.tsx pattern
+- `pavan/app/playground/data/posts.ts` — Blog post data type and seed content (title, date, slug, body)
+- `pavan/app/playground/data/highlights.ts` — `getHighlights()` reads `.md` files from `content/highlights/` at build time, parses frontmatter (platform, date, url, image)
+- `pavan/app/playground/public/page.tsx` — Blog list: reverse-chronological entries with date, title, excerpt
+- `pavan/app/playground/public/page.module.css` — Blog list styles (entry cards with border-bottom)
+- `pavan/app/playground/public/[slug]/page.tsx` — Individual blog post with `generateStaticParams` for SSG
+- `pavan/app/playground/public/[slug]/page.module.css` — Article styles (header, body paragraphs)
+- `pavan/app/playground/hire-me/page.tsx` — Centered "Not right now." with subtitle
+- `pavan/app/playground/hire-me/page.module.css` — Hire Me page styles
+- `pavan/app/playground/highlights/page.tsx` — Maps `getHighlights()` → HighlightCard components
+- `pavan/app/playground/highlights/page.module.css` — Outline cards, line-clamp truncation, image wrapper, platform icon styles
+- `pavan/app/playground/highlights/HighlightCard.tsx` — Server component: platform SVG icons (LinkedIn/X/Instagram), next/image for optional images, "View original" link
+- `pavan/app/playground/highlights/HighlightBody.tsx` — Client component: 5-line CSS line-clamp with "Read more"/"Read less" toggle
+- `pavan/content/highlights/2026-04-14-i-am-excited-to-announced-that-clean-is-.md` — Real LinkedIn post (scraped from URL)
+- `pavan/content/highlights/2026-04-10-geography.md` — Placeholder X post
+- `pavan/content/highlights/2026-04-05-hardest-part.md` — Placeholder LinkedIn post
+- `pavan/public/highlights/2026-04-14-i-am-excited-to-announced-that-clean-is-.jpg` — Scraped og:image from LinkedIn post (73KB)
+- `pavan/scripts/add-highlight.ts` — Scraper: fetches URL, extracts og:description + og:image + date from activity ID, downloads image, writes frontmatter `.md` file
+- `.github/workflows/add-highlight.yml` — GitHub Action: `workflow_dispatch` with `url` input, runs scraper, commits + pushes
+
+#### Deleted
+- `pavan/app/playground/page.module.css` — Removed `.soon` class (no longer needed)
+
+### Patterns Introduced
+- **Markdown-based content**: Highlights stored as `.md` files with YAML frontmatter in `content/highlights/`. Parsed at build time by `getHighlights()` — no CMS, no database.
+- **Unified social card**: Single `HighlightCard` component renders LinkedIn, X, and Instagram posts identically. Platform differentiated only by SVG icon. Adding a new platform requires zero code changes.
+- **CSS line-clamp truncation**: `HighlightBody` uses `-webkit-line-clamp: 5` with JS overflow detection to conditionally show "Read more" toggle.
+- **Scraper → GitHub Action → Vercel pipeline**: `workflow_dispatch` accepts a URL, scraper creates `.md` + downloads image, commits to main, Vercel auto-deploys. Triggered from iOS Shortcut via GitHub's "Dispatch Workflow" action.
+- **PlaygroundNav sub-navigation**: Tabs within `/playground` using `startsWith` matching for active states, separate from the global Nav.
+
+---
+
 ## 2026-04-15 — Add squiggly underlines, dark mode, avatar prank, and PKNY chat
 **PR**: [#4](https://github.com/PavanCodesNY/Pavan/pull/4) | **Merged into**: `main` | **Branch**: `PavanCodesNY/squiggly-prank`
 

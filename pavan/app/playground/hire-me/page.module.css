@@ -1,0 +1,34 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 240px;
+}
+
+.headline {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.subtext {
+  font-family: var(--font-body), Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 26px;
+  color: var(--ink-muted);
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .headline {
+    font-size: 28px;
+    line-height: 36px;
+  }
+}

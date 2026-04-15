@@ -16,21 +16,39 @@
 The Next.js app lives inside the `pavan/` subdirectory. GitHub Actions and docs live at the repo root.
 
 ```
-istanbul/
-├── .github/workflows/    CI/CD pipelines
+repo-root/
+├── .github/workflows/    CI/CD pipelines + highlight automation
 ├── docs/                 Auto-generated documentation
 └── pavan/                Next.js application
     ├── app/
-    │   ├── components/   All UI components
-    │   ├── playground/   Demo/playground page
+    │   ├── components/   Shell-level UI components
+    │   ├── playground/   Tabbed content hub
+    │   │   ├── components/  PlaygroundNav
+    │   │   ├── data/        posts.ts, highlights.ts (content loader)
+    │   │   ├── public/      Blog list + [slug] pages
+    │   │   ├── hire-me/     Recruiter page
+    │   │   └── highlights/  Social cards (HighlightCard, HighlightBody)
     │   ├── globals.css   Design tokens + base styles
     │   ├── layout.tsx    Root layout (wraps with Shell)
     │   └── page.tsx      Home page
+    ├── content/
+    │   └── highlights/   Markdown files (frontmatter + post text)
+    ├── scripts/          add-highlight.ts (URL scraper)
     ├── lib/              Utilities (spring physics, text helpers)
-    ├── public/           Static assets (fonts, avatar)
-    ├── next.config.ts    Turbopack configuration
-    └── tsconfig.json     TypeScript config (strict)
+    ├── public/
+    │   ├── fonts/        ClashDisplay WOFF2
+    │   └── highlights/   Scraped post images
+    ├── next.config.ts    Turbopack + React Compiler
+    └── tsconfig.json     TypeScript config (strict, excludes scripts/)
 ```
+
+## Content Pipeline
+
+Highlights use a **markdown-based content system**:
+- `.md` files in `content/highlights/` with YAML frontmatter (`platform`, `date`, `url`, `image`)
+- `data/highlights.ts` exports `getHighlights()` which reads the directory at build time
+- Images stored in `public/highlights/` and referenced via `image` frontmatter field
+- **Automation**: `scripts/add-highlight.ts` scrapes a URL (og:description, og:image, date), writes `.md` + downloads image. Triggered by GitHub Action `workflow_dispatch` from an iOS Shortcut.
 
 ## Styling Approach
 

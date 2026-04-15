@@ -1,0 +1,39 @@
+name: Add Highlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "LinkedIn, X, or Instagram post URL"
+        required: true
+        type: string
+
+jobs:
+  add-highlight:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install tsx
+        run: npm install -g tsx
+
+      - name: Install dependencies
+        working-directory: pavan
+        run: npm ci
+
+      - name: Run scraper
+        working-directory: pavan
+        run: npx tsx scripts/add-highlight.ts "${{ github.event.inputs.url }}"
+
+      - name: Commit and push
+        run: |
+          git config user.name "highlight-bot"
+          git config user.email "highlight-bot@users.noreply.github.com"
+          git add pavan/content/highlights/ pavan/public/highlights/
+          git commit -m "Add highlight: $(ls -t pavan/content/highlights/ | head -1)"
+          git push

@@ -3,35 +3,33 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
-import styles from "./Nav.module.css";
+import styles from "./PlaygroundNav.module.css";
 
-const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/playground", label: "Playground" },
+const TABS = [
+  { href: "/playground/public", label: "Public" },
+  { href: "/playground/hire-me", label: "Hire Me" },
+  { href: "/playground/highlights", label: "Highlights" },
 ] as const;
 
-export function Nav() {
+export function PlaygroundNav() {
   const pathname = usePathname();
   return (
-    <LayoutGroup id="main-nav">
-      <nav className={styles.nav} aria-label="Primary">
-        {LINKS.map((l) => {
-          const active =
-            l.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(l.href);
+    <LayoutGroup id="playground-tabs">
+      <nav className={styles.tabs} aria-label="Playground sections">
+        {TABS.map((t) => {
+          const active = pathname.startsWith(t.href);
           return (
             <Link
-              key={l.href}
-              href={l.href}
-              className={styles.pill}
+              key={t.href}
+              href={t.href}
+              className={styles.tab}
               data-active={active ? "true" : "false"}
               data-cursor=""
             >
               {active && (
                 <motion.span
                   className={styles.activeBg}
-                  layoutId="nav-active"
+                  layoutId="playground-tab-active"
                   transition={{
                     type: "spring",
                     stiffness: 350,
@@ -40,7 +38,7 @@ export function Nav() {
                   }}
                 />
               )}
-              <span className={styles.label}>{l.label}</span>
+              <span className={styles.label}>{t.label}</span>
             </Link>
           );
         })}
