@@ -17,8 +17,9 @@ All components live in `pavan/app/components/`. Every component uses CSS Modules
 
 ### Avatar
 - **Path**: `components/Avatar.tsx` + `Avatar.module.css`
-- **Purpose**: Fixed top-right avatar image (40x40 circle)
-- **Animation**: Framer Motion `whileHover` scale 1.12x, `whileTap` scale 0.95x with spring
+- **Purpose**: Fixed top-right avatar image (40x40 circle) + dark/light mode toggle easter egg
+- **Animation**: Framer Motion `whileHover` scale 1.12x, `whileTap` scale 0.95x with spring. Subtle glow keyframe animation (3s cycle, accent-colored box-shadow).
+- **Behavior**: Click triggers full-screen overlay with typewriter "hello again", then toggles `html.dark` class and persists to localStorage. Overlay color previews the target theme.
 - **Fallback**: Shows "PK" initials if image fails to load
 
 ### CustomCursor
@@ -33,7 +34,9 @@ All components live in `pavan/app/components/`. Every component uses CSS Modules
 - **Animation**: Framer Motion spring for container morphing between 3 states
 - **States**: `compact` (140x36 pill) → `bar` (50vw input bar on hover) → `expanded` (full chat panel after sending message)
 - **Props**: `visible?: boolean` — controls rendering (tied to Shell loaded state)
-- **Note**: Claude API integration not yet connected (TODO in send function)
+- **Chat agent**: Named "PKNY" with custom personality in `chat-api/system-prompt.js`
+- **Typewriter**: First response typewriter-animates once per message; subsequent views render markdown directly. Tracks seen messages via `Set` ref.
+- **Streaming**: Shows Gen Z loading phrases during streaming, reveals content via typewriter after completion.
 
 ### HersheyLoader
 - **Path**: `components/HersheyLoader.tsx`
@@ -52,6 +55,12 @@ All components live in `pavan/app/components/`. Every component uses CSS Modules
 - **Path**: `components/MagneticLine.tsx` + `MagneticLine.module.css`
 - **Purpose**: Links with word/letter spans that magnetically attract toward cursor
 - **Animation**: Custom spring physics per span via PointerProvider
+
+### ChatMessage
+- **Path**: `components/ChatMessage.tsx` + `ChatMessage.module.css`
+- **Purpose**: Renders individual chat messages (user or assistant)
+- **Sub-components**: `LoadingMessage` (Gen Z phrase type/erase loop), `TypewriterMessage` (character-by-character reveal with `onComplete` callback)
+- **Props**: `role`, `content`, `isStreaming`, `seen`, `onSeen`
 
 ### PretextText
 - **Path**: `components/PretextText.tsx`
