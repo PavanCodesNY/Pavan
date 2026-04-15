@@ -20,6 +20,11 @@
   --paper: #faf9f6;
   --paper-pure: #ffffff;
 
+  /* Chat surface */
+  --chat-surface: #f9f8f4;
+  --chat-surface-elevated: #f7f6f2;
+  --chat-user-bubble: rgba(11, 11, 10, 0.03);
+
   /* Accent (orchestrated at runtime) */
   --accent: var(--ink);
   --accent-target: #c24e1b;

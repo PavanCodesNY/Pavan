@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import styles from "./Nav.module.css";
 
 const LINKS = [
@@ -23,7 +24,19 @@ export function Nav() {
             data-active={active ? "true" : "false"}
             data-cursor=""
           >
-            {l.label}
+            {active && (
+              <motion.span
+                className={styles.activeBg}
+                layoutId="nav-active"
+                transition={{
+                  type: "spring",
+                  stiffness: 350,
+                  damping: 30,
+                  mass: 0.8,
+                }}
+              />
+            )}
+            <span className={styles.label}>{l.label}</span>
           </Link>
         );
       })}

@@ -2,12 +2,24 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import styles from "./Avatar.module.css";
 
 export function Avatar() {
   const [errored, setErrored] = useState(false);
   return (
-    <div className={styles.wrap} data-cursor="">
+    <motion.div
+      className={styles.wrap}
+      data-cursor=""
+      whileHover={{ scale: 1.12, borderColor: "var(--ink)" }}
+      whileTap={{ scale: 0.95 }}
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        mass: 0.6,
+      }}
+    >
       {errored ? (
         <span className={styles.fallback} aria-label="Pavan Kumar">
           PK
@@ -23,6 +35,6 @@ export function Avatar() {
           onError={() => setErrored(true)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
