@@ -8,6 +8,7 @@ import { CustomCursor } from "./CustomCursor";
 import { Nav } from "./Nav";
 import { Avatar } from "./Avatar";
 import { ChatBar } from "./ChatBar";
+import { PageTransition } from "./PageTransition";
 // import { ArrowGuide } from "./ArrowGuide";
 
 type InnerProps = {
@@ -54,7 +55,7 @@ function ShellInner({ children }: InnerProps) {
       <ChatBar visible={loaded} />
       {/* {loaded && <ArrowGuide />} */}
       <div data-loaded={loaded ? "true" : "false"} className="content-veil">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </div>
     </>
   );
