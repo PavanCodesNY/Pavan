@@ -162,6 +162,12 @@ async function main() {
     process.exit(1);
   }
 
+  // Validate URL
+  if (!/^https?:\/\/.+/i.test(url)) {
+    console.error(`Invalid URL: "${url}". Must be a valid http/https URL.`);
+    process.exit(1);
+  }
+
   const platform = detectPlatform(url);
   console.log(`Platform: ${platform}`);
 
@@ -169,12 +175,26 @@ async function main() {
   console.log("Fetching post...");
   const html = await fetchHTML(url);
 
-  // Extract metadata
-  const ogImage = extractMeta(html, "og:image");
-  const ogDesc = extractMeta(html, "og:description");
+  // Extract metadata — try multiple meta tags
+  let ogImage = extractMeta(html, "og:image");
+  let ogDesc =
+    extractMeta(html, "og:description") ||
+    extractMeta(html, "twitter:description") ||
+    extractMeta(html, "description");
+
+  // For X/Twitter: if og tags are empty, try fxtwitter as fallback
+  if (!ogDesc && platform === "x") {
+    const fxUrl = url.replace(/x\.com|twitter\.com/, "fxtwitter.com");
+    console.log("X meta tags empty, trying fxtwitter fallback...");
+    const fxHtml = await fetchHTML(fxUrl);
+    ogDesc =
+      extractMeta(fxHtml, "og:description") ||
+      extractMeta(fxHtml, "twitter:description");
+    if (!ogImage) ogImage = extractMeta(fxHtml, "og:image");
+  }
 
   if (!ogDesc) {
-    console.error("Could not extract post content from og:description");
+    console.error("Could not extract post content from any meta tags");
     process.exit(1);
   }
 

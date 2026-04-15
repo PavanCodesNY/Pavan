@@ -18,7 +18,7 @@ app.get("/health", (_req, res) => {
 });
 
 // Chat endpoint — streams response from Claude via CLI subscription
-app.post("/chat", async (req, res) => {
+app.post("/", async (req, res) => {
   const { messages } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
