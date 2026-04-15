@@ -182,15 +182,22 @@ async function main() {
     extractMeta(html, "twitter:description") ||
     extractMeta(html, "description");
 
-  // For X/Twitter: if og tags are empty, try fxtwitter as fallback
+  // For X/Twitter: if og tags are empty, use fxtwitter JSON API
   if (!ogDesc && platform === "x") {
-    const fxUrl = url.replace(/x\.com|twitter\.com/, "fxtwitter.com");
-    console.log("X meta tags empty, trying fxtwitter fallback...");
-    const fxHtml = await fetchHTML(fxUrl);
-    ogDesc =
-      extractMeta(fxHtml, "og:description") ||
-      extractMeta(fxHtml, "twitter:description");
-    if (!ogImage) ogImage = extractMeta(fxHtml, "og:image");
+    const apiUrl = url
+      .replace(/x\.com|twitter\.com/, "api.fxtwitter.com")
+      .split("?")[0];
+    console.log("X meta tags empty, trying fxtwitter API...");
+    const apiJson = await fetchHTML(apiUrl);
+    try {
+      const data = JSON.parse(apiJson);
+      if (data.tweet?.text) ogDesc = data.tweet.text;
+      if (!ogImage && data.tweet?.media?.photos?.[0]?.url) {
+        ogImage = data.tweet.media.photos[0].url;
+      }
+    } catch {
+      console.log("fxtwitter API parse failed");
+    }
   }
 
   if (!ogDesc) {
