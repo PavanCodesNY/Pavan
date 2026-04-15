@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import styles from "./PlaygroundNav.module.css";
 
 const TABS = [
@@ -24,7 +25,19 @@ export function PlaygroundNav() {
             data-active={active ? "true" : "false"}
             data-cursor=""
           >
-            {t.label}
+            {active && (
+              <motion.span
+                className={styles.activeBg}
+                layoutId="playground-tab-active"
+                transition={{
+                  type: "spring",
+                  stiffness: 350,
+                  damping: 30,
+                  mass: 0.8,
+                }}
+              />
+            )}
+            <span className={styles.label}>{t.label}</span>
           </Link>
         );
       })}

@@ -5,6 +5,7 @@
 }
 
 .tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
@@ -21,7 +22,6 @@
   text-decoration: none;
   transition:
     border-color 260ms var(--ease-ink),
-    background 260ms var(--ease-ink),
     color 260ms var(--ease-ink);
 }
 
@@ -31,9 +31,21 @@
 }
 
 .tab[data-active="true"] {
-  background: var(--ink);
   color: var(--paper);
   border-color: var(--ink);
+}
+
+.activeBg {
+  position: absolute;
+  inset: -1px;
+  border-radius: 999px;
+  background: var(--ink);
+  z-index: -1;
+}
+
+.label {
+  position: relative;
+  z-index: 1;
 }
 
 .tab:focus-visible {
