@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import styles from "./ChatMessage.module.css";
@@ -32,7 +32,17 @@ const LOADING_PHRASES = [
   "this hits different wait…",
 ];
 
-function useLoadingPhrases(isLoading: boolean) {
+function pickPhrase(usedSet: Set<number>): string {
+  if (usedSet.size >= LOADING_PHRASES.length) usedSet.clear();
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * LOADING_PHRASES.length);
+  } while (usedSet.has(idx));
+  usedSet.add(idx);
+  return LOADING_PHRASES[idx];
+}
+
+function LoadingMessage() {
   const [displayed, setDisplayed] = useState("");
   const phraseRef = useRef("");
   const charRef = useRef(0);
@@ -40,27 +50,7 @@ function useLoadingPhrases(isLoading: boolean) {
   const usedRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-    if (!isLoading) {
-      setDisplayed("");
-      phraseRef.current = "";
-      charRef.current = 0;
-      phaseRef.current = "typing";
-      return;
-    }
-
-    const pick = () => {
-      if (usedRef.current.size >= LOADING_PHRASES.length) {
-        usedRef.current.clear();
-      }
-      let idx: number;
-      do {
-        idx = Math.floor(Math.random() * LOADING_PHRASES.length);
-      } while (usedRef.current.has(idx));
-      usedRef.current.add(idx);
-      return LOADING_PHRASES[idx];
-    };
-
-    phraseRef.current = pick();
+    phraseRef.current = pickPhrase(usedRef.current);
     charRef.current = 0;
     phaseRef.current = "typing";
     let pauseTimeout: ReturnType<typeof setTimeout>;
@@ -81,7 +71,7 @@ function useLoadingPhrases(isLoading: boolean) {
         charRef.current--;
         setDisplayed(current.slice(0, charRef.current));
         if (charRef.current <= 0) {
-          phraseRef.current = pick();
+          phraseRef.current = pickPhrase(usedRef.current);
           charRef.current = 0;
           phaseRef.current = "typing";
         }
@@ -92,45 +82,58 @@ function useLoadingPhrases(isLoading: boolean) {
       clearInterval(timer);
       clearTimeout(pauseTimeout);
     };
-  }, [isLoading]);
+  }, []);
 
-  return displayed;
+  return (
+    <div className={`${styles.message} ${styles.assistant} ${styles.loading}`}>
+      {displayed}
+      <span className={styles.cursor} />
+    </div>
+  );
 }
 
-function useTypewriter(text: string, enabled: boolean, speed = 16) {
-  const [displayed, setDisplayed] = useState(text);
-  const [done, setDone] = useState(true);
+function TypewriterMessage({ content }: { content: string }) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
   const indexRef = useRef(0);
-  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
-    // Only typewrite on first content arrival, not on re-renders
-    if (!enabled || hasAnimatedRef.current || !text) {
-      setDisplayed(text);
-      setDone(true);
-      return;
-    }
-
-    hasAnimatedRef.current = true;
     indexRef.current = 0;
-    setDisplayed("");
-    setDone(false);
+
+    // Use queueMicrotask to avoid synchronous setState in effect body
+    queueMicrotask(() => {
+      setDisplayed("");
+      setDone(false);
+    });
 
     const timer = setInterval(() => {
-      const charsToAdd = text[indexRef.current] === " " ? 2 : 1;
-      indexRef.current = Math.min(indexRef.current + charsToAdd, text.length);
-      setDisplayed(text.slice(0, indexRef.current));
+      const charsToAdd = content[indexRef.current] === " " ? 2 : 1;
+      indexRef.current = Math.min(indexRef.current + charsToAdd, content.length);
+      setDisplayed(content.slice(0, indexRef.current));
 
-      if (indexRef.current >= text.length) {
+      if (indexRef.current >= content.length) {
         setDone(true);
         clearInterval(timer);
       }
-    }, speed);
+    }, 16);
 
     return () => clearInterval(timer);
-  }, [text, enabled, speed]);
+  }, [content]);
 
-  return { displayed, done };
+  if (done) {
+    return (
+      <div className={`${styles.message} ${styles.assistant} ${styles.prose}`}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.message} ${styles.assistant}`}>
+      {displayed}
+      <span className={styles.cursor} />
+    </div>
+  );
 }
 
 export function ChatMessage({ role, content, isStreaming }: Props) {
@@ -143,33 +146,28 @@ export function ChatMessage({ role, content, isStreaming }: Props) {
 
 function AssistantMessage({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
   const isWaiting = isStreaming && !content;
-  const hasContent = content.length > 0;
-  const justArrived = isStreaming === false && hasContent;
+  const [hasTypewritten, setHasTypewritten] = useState(false);
 
-  const loadingPhrase = useLoadingPhrases(!!isWaiting);
-  const { displayed, done } = useTypewriter(content, justArrived);
+  // When streaming completes with content, trigger typewriter once
+  const shouldTypewrite = isStreaming === false && content.length > 0 && !hasTypewritten;
 
-  // Waiting for response — show fun loading phrases
+  useEffect(() => {
+    if (shouldTypewrite) {
+      // Mark as typewritten after component renders with TypewriterMessage
+      const t = setTimeout(() => setHasTypewritten(true), 0);
+      return () => clearTimeout(t);
+    }
+  }, [shouldTypewrite]);
+
   if (isWaiting) {
-    return (
-      <div className={`${styles.message} ${styles.assistant} ${styles.loading}`}>
-        {loadingPhrase}
-        <span className={styles.cursor} />
-      </div>
-    );
+    return <LoadingMessage />;
   }
 
-  // Typewriting the response
-  if (!done) {
-    return (
-      <div className={`${styles.message} ${styles.assistant}`}>
-        {displayed}
-        <span className={styles.cursor} />
-      </div>
-    );
+  if (shouldTypewrite || (!hasTypewritten && content.length > 0 && isStreaming === false)) {
+    return <TypewriterMessage content={content} />;
   }
 
-  // Done — render full markdown
+  // Already shown / old messages — render markdown directly
   return (
     <div className={`${styles.message} ${styles.assistant} ${styles.prose}`}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
