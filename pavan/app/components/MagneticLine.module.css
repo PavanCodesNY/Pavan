@@ -18,13 +18,14 @@
 
 .link {
   color: inherit;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 1800ms var(--ease-ink);
+  text-decoration: underline wavy transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 1800ms var(--ease-ink);
 }
 
 :global(body.bleed-links) .link {
-  border-bottom-color: var(--accent);
+  text-decoration-color: #2563eb;
 }
 
 .link:focus-visible {

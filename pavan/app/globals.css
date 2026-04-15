@@ -113,6 +113,32 @@ a {
   cursor: none;
 }
 
+/* ── Dark mode ─────────────────────────────────── */
+html.dark,
+html.dark:root {
+  color-scheme: dark;
+  --ink: #faf9f6;
+  --ink-muted: rgba(250, 249, 246, 0.6);
+  --ink-hush: rgba(250, 249, 246, 0.18);
+  --paper: #0b0b0a;
+  --paper-pure: #000000;
+  --chat-surface: #141413;
+  --chat-surface-elevated: #1a1a19;
+  --chat-user-bubble: rgba(250, 249, 246, 0.05);
+  background: #0b0b0a;
+  color: #faf9f6;
+}
+
+html.dark body {
+  background: #0b0b0a;
+  color: #faf9f6;
+}
+
+html.dark ::selection {
+  background: var(--accent-target);
+  color: #0b0b0a;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .content-veil,
   .content-veil[data-loaded="false"] {

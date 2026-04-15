@@ -35,6 +35,7 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
   const [input, setInput] = useState("");
   const [sizes, setSizes] = useState(SIZES);
   const [isStreaming, setIsStreaming] = useState(false);
+  const seenRef = useRef<Set<number>>(new Set());
   const rootRef = useRef<HTMLDivElement>(null);
   const barInputRef = useRef<HTMLTextAreaElement>(null);
   const panelInputRef = useRef<HTMLTextAreaElement>(null);
@@ -333,7 +334,7 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
             transition={{ duration: 0.25, delay: 0.15 }}
           >
             <div className={styles.header}>
-              <span className={styles.title}>Ask Pavan</span>
+              <span className={styles.title}>PKNY</span>
               <button
                 className={styles.close}
                 onClick={forceCollapse}
@@ -347,7 +348,7 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
             <div ref={messagesRef} className={styles.messages}>
               {messages.length === 0 ? (
                 <div className={styles.empty}>
-                  Ask anything about Pavan.
+                  Ask PKNY anything.
                 </div>
               ) : (
                 messages.map((msg, i) => (
@@ -356,6 +357,8 @@ export function ChatBar({ visible = true }: { visible?: boolean }) {
                     role={msg.role}
                     content={msg.content}
                     isStreaming={msg.isStreaming}
+                    seen={seenRef.current.has(i)}
+                    onSeen={() => seenRef.current.add(i)}
                   />
                 ))
               )}

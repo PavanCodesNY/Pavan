@@ -92,19 +92,15 @@ function LoadingMessage() {
   );
 }
 
-function TypewriterMessage({ content }: { content: string }) {
+function TypewriterMessage({ content, onComplete }: { content: string; onComplete?: () => void }) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
 
   useEffect(() => {
     indexRef.current = 0;
-
-    // Use queueMicrotask to avoid synchronous setState in effect body
-    queueMicrotask(() => {
-      setDisplayed("");
-      setDone(false);
-    });
+    setDisplayed("");
+    setDone(false);
 
     const timer = setInterval(() => {
       const charsToAdd = content[indexRef.current] === " " ? 2 : 1;
@@ -114,11 +110,12 @@ function TypewriterMessage({ content }: { content: string }) {
       if (indexRef.current >= content.length) {
         setDone(true);
         clearInterval(timer);
+        onComplete?.();
       }
     }, 16);
 
     return () => clearInterval(timer);
-  }, [content]);
+  }, [content, onComplete]);
 
   if (done) {
     return (
@@ -136,41 +133,39 @@ function TypewriterMessage({ content }: { content: string }) {
   );
 }
 
-export function ChatMessage({ role, content, isStreaming }: Props) {
+export function ChatMessage({ role, content, isStreaming, seen, onSeen }: Props & { seen?: boolean; onSeen?: () => void }) {
   if (role === "user") {
     return <div className={`${styles.message} ${styles.user}`}>{content}</div>;
   }
 
-  return <AssistantMessage content={content} isStreaming={isStreaming} />;
+  return <AssistantMessage content={content} isStreaming={isStreaming} seen={seen} onSeen={onSeen} />;
 }
 
-function AssistantMessage({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
+function AssistantMessage({ content, isStreaming, seen, onSeen }: { content: string; isStreaming?: boolean; seen?: boolean; onSeen?: () => void }) {
   const isWaiting = isStreaming && !content;
-  const [hasTypewritten, setHasTypewritten] = useState(false);
-
-  // When streaming completes with content, trigger typewriter once
-  const shouldTypewrite = isStreaming === false && content.length > 0 && !hasTypewritten;
-
-  useEffect(() => {
-    if (shouldTypewrite) {
-      // Mark as typewritten after component renders with TypewriterMessage
-      const t = setTimeout(() => setHasTypewritten(true), 0);
-      return () => clearTimeout(t);
-    }
-  }, [shouldTypewrite]);
 
   if (isWaiting) {
     return <LoadingMessage />;
   }
 
-  if (shouldTypewrite || (!hasTypewritten && content.length > 0 && isStreaming === false)) {
-    return <TypewriterMessage content={content} />;
+  // Already seen — render markdown directly, no typewriter
+  if (seen) {
+    return (
+      <div className={`${styles.message} ${styles.assistant} ${styles.prose}`}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      </div>
+    );
   }
 
-  // Already shown / old messages — render markdown directly
-  return (
-    <div className={`${styles.message} ${styles.assistant} ${styles.prose}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-    </div>
-  );
+  // Streaming complete, not yet seen — typewrite once
+  if (isStreaming === false && content.length > 0) {
+    return <TypewriterMessage content={content} onComplete={onSeen} />;
+  }
+
+  // Still streaming — keep showing loading phrases, don't reveal content
+  if (isStreaming) {
+    return <LoadingMessage />;
+  }
+
+  return null;
 }

@@ -8,6 +8,7 @@ import { CustomCursor } from "./CustomCursor";
 import { Nav } from "./Nav";
 import { Avatar } from "./Avatar";
 import { ChatBar } from "./ChatBar";
+// import { ArrowGuide } from "./ArrowGuide";
 
 type InnerProps = {
   children: ReactNode;
@@ -51,6 +52,7 @@ function ShellInner({ children }: InnerProps) {
       <Nav />
       <Avatar />
       <ChatBar visible={loaded} />
+      {/* {loaded && <ArrowGuide />} */}
       <div data-loaded={loaded ? "true" : "false"} className="content-veil">
         {children}
       </div>
