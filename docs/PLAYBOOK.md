@@ -94,6 +94,8 @@ Post text here...
 
 ## 5. Chat API (PKNY)
 
+**Full deep-dive:** [`CHAT-API-PLAYBOOK.md`](./CHAT-API-PLAYBOOK.md) — architecture, every layer, every failure mode, setup from scratch.
+
 ### Architecture
 ```
 pavankumarny.me → fetch POST → chat.pavankumarny.me → Docker container → Claude CLI
