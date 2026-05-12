@@ -1,17 +1,5 @@
 @import "tailwindcss";
 
-@property --accent {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #0b0b0a;
-}
-
-@property --rule-opacity {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
 :root {
   /* Ink / paper */
   --ink: #0b0b0a;
@@ -25,12 +13,9 @@
   --chat-surface-elevated: #f7f6f2;
   --chat-user-bubble: rgba(11, 11, 10, 0.03);
 
-  /* Accent (orchestrated at runtime) */
+  /* Accent */
   --accent: var(--ink);
   --accent-target: #c24e1b;
-
-  /* Revealed rule */
-  --rule-opacity: 0;
 
   /* Layout */
   --measure: 504px;
@@ -56,6 +41,8 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html,
@@ -65,11 +52,6 @@ body {
   min-height: 100vh;
 }
 
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 body {
   font-family: var(--font-body), "Instrument Serif", Georgia, serif;
   font-weight: 400;
@@ -77,19 +59,7 @@ body {
   line-height: 32px;
   letter-spacing: -0.003em;
   font-feature-settings: "kern", "liga", "onum";
-  hanging-punctuation: first last;
   hyphens: none;
-  orphans: 2;
-  widows: 2;
-}
-
-body.bleed-links {
-  transition: --accent 1800ms var(--ease-ink);
-  --accent: var(--accent-target);
-}
-
-body.bleed-rule {
-  --rule-opacity: 1;
 }
 
 a {
@@ -103,18 +73,7 @@ a {
 }
 
 .content-veil {
-  opacity: 0;
-  transition: opacity 450ms var(--ease-ink) 50ms;
-}
-
-.content-veil[data-loaded="true"] {
   opacity: 1;
-}
-
-:where(html.has-custom-cursor) body,
-:where(html.has-custom-cursor) a,
-:where(html.has-custom-cursor) button {
-  cursor: none;
 }
 
 /* ── Dark mode ─────────────────────────────────── */
@@ -141,11 +100,4 @@ html.dark body {
 html.dark ::selection {
   background: var(--accent-target);
   color: #0b0b0a;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .content-veil,
-  .content-veil[data-loaded="false"] {
-    opacity: 1;
-  }
 }

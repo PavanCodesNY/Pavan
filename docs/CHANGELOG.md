@@ -4,6 +4,39 @@ Every entry lists all files touched and what changed in each, so parallel agents
 
 ---
 
+## 2026-04-21 — Strip cross-browser-breaking animations
+**Branch**: `PavanCodesNY/dublin-v2` | **Direct to**: `main`
+
+### Summary
+A friend's computer was showing text "jumping around" with a stray cursor dot and no visible cursor. Audit confirmed the cause: `PretextText` re-measured text post-hydration (causing layout shift), `BreathingProse` started invisible behind `clip-path: inset(0 100% 0 0)` and relied on JS to reveal, `CustomCursor` left only its dot visible on browsers where the ring failed to paint, and `MagneticLine` ran per-letter spring physics on every pointer tick. Stripped the entire animation layer that manipulates text. Kept: nav pill slide, page-enter fade, avatar hover, chat morphing, smooth scroll, dark mode.
+
+### Files Changed
+
+#### Deleted
+- `pavan/app/components/CustomCursor.tsx` + `.module.css` — Custom cursor with spring physics. Broke on non-Chrome configs (rare WebGL / mix-blend-mode failures), left a stray dot.
+- `pavan/app/components/PointerProvider.tsx` — RAF subscription provider. No longer needed once cursor + magnetism are gone.
+- `pavan/app/components/HersheyLoader.tsx` + `.module.css` — Removed earlier; cleaned up dead files.
+- `pavan/lib/spring.ts` — Spring physics util. Only consumers were CustomCursor + MagneticLine, both rewritten.
+
+#### Modified (rewritten as static / simplified)
+- `pavan/app/components/MagneticLine.tsx` — Server component now. Renders `parts` as plain `<span>` / `<Link>`. No `usePointer`, no `useEffect`, no transforms, no spring loop. Same prop shape (`MagneticPart[]`) so call sites are unchanged.
+- `pavan/app/components/MagneticLine.module.css` — Dropped `will-change`, `transform`, and the `body.bleed-links` color-transition rule. Switched `text-decoration: underline wavy transparent` to `underline solid #2563eb` for Safari compat.
+- `pavan/app/components/BreathingProse.tsx` — Server component now. Drops `useEffect` + `IntersectionObserver` + `usePointer`. Just maps paragraphs to `<PretextText>`.
+- `pavan/app/components/BreathingProse.module.css` — Dropped `.line`, `.charPara`, `.simplePara`, `.assembled`, `clip-path`, breath opacity vars. Kept `.root` and `.para` typography.
+- `pavan/app/components/PretextText.tsx` — Server component now. Drops `useLayoutEffect`, `ResizeObserver`, `useMemo`, `useState`, `@chenglou/pretext` runtime usage. Renders segments inline as a single styled element. Props slimmed to `{segments, as?, className?}` (removed `lineHeight`, `lineClassName`, `lineAttrs`).
+- `pavan/app/components/PretextText.module.css` — Dropped `.root` and `.line` rules. Wavy underline → solid `#2563eb`. Removed `body.bleed-links` color-transition rule.
+- `pavan/app/components/Shell.tsx` — Server component now. Removed `PointerProvider` wrapper, `CustomCursor` import + render, the `useEffect` setTimeout chain that added `bleed-links`/`bleed-cursor`/`bleed-rule` to body, and the `ShellInner` indirection. Still renders Nav, Avatar, ChatBar, and the content-veil wrapper.
+- `pavan/app/components/Footer.tsx` — Dropped `lineHeight={16}` prop from `<PretextText>` (no longer a valid prop).
+- `pavan/app/components/Footer.module.css` — Hardcoded `.rule { opacity: 1 }`. Removed `--rule-opacity` variable usage and `transition: opacity 1200ms` (was triggered by `bleed-rule` body class which is gone).
+- `pavan/app/globals.css` — Removed `@property --accent` + `@property --rule-opacity`, `--rule-opacity` initial value, `body.bleed-links` + `body.bleed-rule` rules, `:where(html.has-custom-cursor) ... cursor: none` block, `hanging-punctuation` body rule (Firefox unsupported), `orphans` + `widows` body rules, `.content-veil` fade-in transition (now always visible), and the `prefers-reduced-motion` content-veil override (no longer needed).
+
+### Patterns Introduced / Confirmed
+- **Render static, hydrate cosmetically.** Anything that affects whether text is visible runs at build/SSR time, not in `useEffect`. JS may *enhance* (Framer Motion nav pill, ChatBar morph) but never *gate* visibility.
+- **Solid underlines for cross-browser links** — `text-decoration: underline solid #2563eb` works in every browser. Wavy is cosmetic-only and broken in older Safari.
+- **No custom cursor** — relying on native cursor avoids a whole class of paint/compositing bugs on non-Mac configs.
+
+---
+
 ## 2026-04-15 — Post-merge fixes, Vercel deployment, Cloudflare Tunnel, iOS Shortcut
 **Commits**: `e0d1c68`..`2d8c695` + `highlight-bot` commits | **Direct to**: `main`
 

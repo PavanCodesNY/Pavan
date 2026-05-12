@@ -13,45 +13,4 @@
   color: var(--ink);
   margin: 0;
   font-feature-settings: "kern", "liga", "onum";
-  text-wrap: pretty;
-}
-
-.line {
-  display: block;
-  opacity: calc(0.84 + var(--breath, 0) * 0.16);
-  transition: opacity 140ms linear;
-  will-change: opacity, clip-path;
-}
-
-/* First paragraph: per-line left-to-right clip-path reveal */
-.charPara .line {
-  clip-path: inset(0 100% 0 0);
-  transition:
-    clip-path 560ms var(--ease-stroke),
-    opacity 140ms linear;
-  transition-delay: calc(var(--i, 0) * 110ms);
-}
-.charPara.assembled .line {
-  clip-path: inset(0 0 0 0);
-}
-
-/* 2nd / 3rd paragraphs: per-line fade, staggered */
-.simplePara .line {
-  opacity: 0;
-  transition:
-    opacity 540ms var(--ease-ink),
-    clip-path 0ms;
-  transition-delay: calc(var(--i, 0) * 80ms);
-}
-.simplePara.assembled .line {
-  opacity: calc(0.84 + var(--breath, 0) * 0.16);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .charPara .line,
-  .simplePara .line {
-    clip-path: none;
-    opacity: 1;
-    transition: none;
-  }
 }

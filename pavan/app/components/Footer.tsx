@@ -8,7 +8,6 @@ export function Footer() {
       <PretextText
         as="p"
         segments={["// Updated April 2026"]}
-        lineHeight={16}
         className={styles.caption}
       />
     </footer>

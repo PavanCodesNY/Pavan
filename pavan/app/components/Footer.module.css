@@ -10,8 +10,7 @@
   width: 32px;
   height: 1px;
   background: var(--ink);
-  opacity: var(--rule-opacity, 0);
-  transition: opacity 1200ms var(--ease-ink);
+  opacity: 1;
 }
 
 .caption {

@@ -11,21 +11,14 @@
 }
 
 .part {
-  display: inline-block;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+  display: inline;
 }
 
 .link {
   color: inherit;
-  text-decoration: underline wavy transparent;
+  text-decoration: underline solid #2563eb;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  transition: text-decoration-color 1800ms var(--ease-ink);
-}
-
-:global(body.bleed-links) .link {
-  text-decoration-color: #2563eb;
 }
 
 .link:focus-visible {
