@@ -37,7 +37,7 @@ const body = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Pavan Kumar",
   description:
-    "18. Building Clean, the shared context intelligence layer for AI Agents.",
+    "18. Building Clean, the first self-learning IDE that learns from your team the more you ship.",
   openGraph: {
     title: "Pavan Kumar",
     description: "18. Building Clean.",

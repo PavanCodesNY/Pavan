@@ -7,7 +7,7 @@ export function Footer() {
       <span className={styles.rule} aria-hidden="true" />
       <PretextText
         as="p"
-        segments={["// Updated April 2026"]}
+        segments={["// Updated May 2026"]}
         className={styles.caption}
       />
     </footer>
